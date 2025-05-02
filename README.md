@@ -1,86 +1,108 @@
-# Big Data Pseudo-distributed Environment with Hadoop, Spark, Kafka, Python, and Jupyter
+#  Projet Big Data — Système de Recommandation de Films avec MovieLens
 
-## 🌍 Project Overview
-This project provides a ready-to-use Dockerized environment to work with:
-- **Hadoop 3.3.6** (pseudo-distributed)
-- **Spark 3.5.1** (standalone mode)
-- **Kafka 3.6.1** (with Zookeeper)
-- **Python 3** + **PySpark**
-- **Jupyter Notebook**
 
-## 📊 Architecture
-- Hadoop HDFS for distributed file storage (single-node setup)
-- Spark for batch and streaming data processing
-- Kafka for streaming ingestion
-- Python environment with Jupyter for development and experimentation
 
-## 🔧 Project Structure
-```
-/
-|-- Dockerfile
-|-- docker-compose.yml
-|-- Makefile
-|-- requirements.txt
-|-- config/
-|   |-- hadoop/
-|       |-- core-site.xml
-|       |-- hdfs-site.xml
-|       |-- mapred-site.xml
-|       |-- yarn-site.xml
-|-- notebooks/
-|   |-- spark_kafka_demo.ipynb
-|-- scripts/
-    |-- spark_batch_csv_count.py
-```
+##  Stack Technique
 
-## 🔄 Quick Start
-
-### 1. Build the Docker Image
-```bash
-make build
-```
-
-### 2. Launch the Environment
-```bash
-make up
-```
-
-This will start:
-- Hadoop HDFS & YARN
-- Kafka + Zookeeper
-- Jupyter Notebook (accessible on http://localhost:8888)
-
-### 3. Access the Container
-```bash
-make shell
-```
-
-### 4. Shut Down
-```bash
-make down
-```
-
-### 5. Clean Everything (containers, images, volumes)
-```bash
-make clean
-```
-
-## 📄 Notebooks & Scripts
-- **spark_kafka_demo.ipynb** : Connects Spark Structured Streaming to a Kafka topic and displays the streamed data.
-- **spark_batch_csv_count.py** : A simple Spark batch job reading a CSV file from HDFS and counting rows.
-
-## 🔔 Notes
-- Hadoop HDFS Web UI: [http://localhost:9870](http://localhost:9870)
-- Ensure you manually create Kafka topics using:
-  ```bash
-  kafka-topics.sh --create --topic test-topic --bootstrap-server localhost:9092
-  ```
-- Upload datasets to HDFS:
-  ```bash
-  hdfs dfs -mkdir -p /datasets
-  hdfs dfs -put your_file.csv /datasets/
-  ```
+- Apache Spark (PySpark)
+- Hadoop HDFS
+- Apache Kafka + Kafka Python
+- Jupyter Notebook
+- Python 3.10
+- Streamlit
 
 ---
 
-Made with ❤️ by Marie
+##  Arborescence
+
+```
+notebooks/
+├── ProjetBigData.ipynb         # Notebook d'entraînement du modèle
+├── kafka_producer.py           # Producteur Kafka simulant les notes
+├── kafka_consumer.py           # Consommateur Kafka (streaming Spark)
+├── dashboard.py                # Dashboard Streamlit
+├── rating.csv                  # Notes MovieLens
+├── movie.csv                   # Films MovieLens
+```
+
+---
+
+##  Lancement du projet
+
+### 1. Construire l’image Docker
+
+```bash
+docker compose build
+```
+
+### 2. Lancer les services
+
+```bash
+docker compose up -d
+```
+
+---
+
+##  Stockage des données dans HDFS
+
+Depuis le container :
+
+```bash
+hdfs dfs -mkdir -p /datasets
+hdfs dfs -put /notebooks/rating.csv /datasets/
+hdfs dfs -put /notebooks/movie.csv /datasets/
+```
+
+---
+
+##  Entraînement du modèle ALS
+
+Dans le notebook `ProjetBigData.ipynb` :
+
+- Charger les données depuis HDFS
+- Entraîner le modèle `ALS`
+- Sauvegarder le modèle :
+
+```python
+model.save("hdfs://namenode:9000/models/als_model")
+```
+
+---
+
+## 📡 Traitement temps réel avec Kafka
+
+### 1. Lancer le producteur
+
+```bash
+python3 /notebooks/kafka_producer.py
+```
+
+Cela enverra des messages simulés dans le topic `movies_ratings`.
+
+### 2. Lancer le consommateur Spark
+
+Dans un autre terminal :
+
+```bash
+python3 /notebooks/kafka_consumer.py
+```
+
+Ce script :
+- Consomme le topic Kafka
+- Applique le modèle ALS pour générer des prédictions
+- Sauvegarde dans `streaming_recommendations.csv`
+
+---
+
+## Tableau de bord
+
+Lancer Streamlit :
+
+```bash
+streamlit run /notebooks/dashboard.py --server.port=8501
+```
+
+Puis accéder à : [http://localhost:8501](http://localhost:8501)
+
+---
+
