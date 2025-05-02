@@ -58,6 +58,24 @@ sleep 5
 echo "Starting Kafka broker..."
 $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
 
+# Wait for Kafka to be ready
+echo "Waiting for Kafka to initialize..."
+sleep 10
+
+# Create the topic if it doesn't exist
+echo "Checking if topic 'movies_ratings' exists..."
+if ! $KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list | grep -q "^movies_ratings$"; then
+  echo "Creating topic 'movies_ratings'..."
+  $KAFKA_HOME/bin/kafka-topics.sh \
+    --create \
+    --bootstrap-server localhost:9092 \
+    --replication-factor 1 \
+    --partitions 1 \
+    --topic movies_ratings
+else
+  echo "Topic 'movies_ratings' already exists."
+fi
+
 # Start Jupyter Notebook
 echo "Starting Jupyter Notebook..."
 mkdir -p /notebooks

@@ -19,10 +19,12 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # Charger le modèle ALS
-model = ALSModel.load("/content/als_model")
+model = ALSModel.load("hdfs://namenode:9000/models/als_model")
+
 
 # Charger les informations des films
-movies_df = spark.read.csv('movies.csv', header=True)
+movies_df = spark.read.csv("hdfs://namenode:9000/datasets/movie.csv", header=True, inferSchema=True)
+
 
 def process_message(msg):
     """Traite un message reçu de Kafka"""
